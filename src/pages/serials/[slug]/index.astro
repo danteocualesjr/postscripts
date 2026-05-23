@@ -4,6 +4,7 @@ import {
   getAllSeries,
   getSeriesBySlug,
   getPublishedInstallments,
+  getInstallmentSlug,
   formatDate,
   formatDateTimeAttr,
 } from '../../../lib/serials';
@@ -38,7 +39,7 @@ const latest = installments.at(-1);
         <div class="series-hero__latest">
           <p class="series-hero__latest-label">Latest installment</p>
           <p class="series-hero__latest-title">
-            <a href={`/serials/${slug}/${latest.data.slug}`}>{latest.data.title}</a>
+            <a href={`/serials/${slug}/${getInstallmentSlug(latest)}`}>{latest.data.title}</a>
           </p>
         </div>
       )
@@ -46,7 +47,7 @@ const latest = installments.at(-1);
 
     {
       first && (
-        <a class="series-hero__start" href={`/serials/${slug}/${first.data.slug}`}>
+        <a class="series-hero__start" href={`/serials/${slug}/${getInstallmentSlug(first)}`}>
           Start here
         </a>
       )
@@ -64,7 +65,7 @@ const latest = installments.at(-1);
                 {String(entry.data.installment).padStart(2, '0')}
               </span>
               <span class="installment-index__title">
-                <a href={`/serials/${slug}/${entry.data.slug}`}>{entry.data.title}</a>
+                <a href={`/serials/${slug}/${getInstallmentSlug(entry)}`}>{entry.data.title}</a>
               </span>
               <time class="installment-index__date" datetime={formatDateTimeAttr(entry.data.publishedAt)}>
                 {formatDate(entry.data.publishedAt)}

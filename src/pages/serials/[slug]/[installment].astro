@@ -2,6 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import {
   getPublishedInstallments,
+  getInstallmentSlug,
   getSeriesBySlug,
   formatDate,
 } from '../../../lib/serials';
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
       return {
         params: {
           slug: entry.data.series,
-          installment: entry.data.slug,
+          installment: getInstallmentSlug(entry),
         },
         props: { entry, Content },
       };
@@ -29,7 +30,7 @@ const { entry, Content } = Astro.props;
 
 const series = await getSeriesBySlug(slug!);
 const installments = await getPublishedInstallments(slug!);
-const index = installments.findIndex((item) => item.data.slug === installmentSlug);
+const index = installments.findIndex((item) => getInstallmentSlug(item) === installmentSlug);
 const prev = index > 0 ? installments[index - 1] : undefined;
 const next = index >= 0 && index < installments.length - 1 ? installments[index + 1] : undefined;
 ---
@@ -55,7 +56,7 @@ const next = index >= 0 && index < installments.length - 1 ? installments[index 
     <nav class="reading__nav" aria-label="Installment navigation">
       {
         prev ? (
-          <a class="reading__nav-link" href={`/serials/${slug}/${prev.data.slug}`}>
+          <a class="reading__nav-link" href={`/serials/${slug}/${getInstallmentSlug(prev)}`}>
             ← {prev.data.title}
           </a>
         ) : (
@@ -66,7 +67,7 @@ const next = index >= 0 && index < installments.length - 1 ? installments[index 
         next ? (
           <a
             class="reading__nav-link reading__nav-link--next"
-            href={`/serials/${slug}/${next.data.slug}`}
+            href={`/serials/${slug}/${getInstallmentSlug(next)}`}
           >
             {next.data.title} →
           </a>

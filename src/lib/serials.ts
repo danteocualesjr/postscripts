@@ -3,6 +3,12 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 export type SeriesEntry = CollectionEntry<'series'>;
 export type InstallmentEntry = CollectionEntry<'installments'>;
 
+/** URL slug derived from filename (e.g. `02-the-second-note.md` → `the-second-note`). */
+export function getInstallmentSlug(entry: InstallmentEntry): string {
+  const filename = entry.id.split('/').pop() ?? entry.id;
+  return filename.replace(/\.md$/, '').replace(/^\d+-/, '');
+}
+
 export async function getAllSeries(): Promise<SeriesEntry[]> {
   const all = await getCollection('series');
   return all.sort((a, b) => a.data.order - b.data.order);
@@ -30,7 +36,7 @@ export async function getInstallment(
   installmentSlug: string,
 ): Promise<InstallmentEntry | undefined> {
   const installments = await getPublishedInstallments(seriesSlug);
-  return installments.find((entry) => entry.data.slug === installmentSlug);
+  return installments.find((entry) => getInstallmentSlug(entry) === installmentSlug);
 }
 
 const STATUS_LABELS: Record<SeriesEntry['data']['status'], string> = {

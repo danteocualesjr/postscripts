@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   getAllSeries,
   getPublishedInstallments,
+  getInstallmentSlug,
   formatSeriesStatus,
 } from '../lib/serials';
 
@@ -49,7 +50,7 @@ const installmentsBySeries = Object.fromEntries(
               latest ? (
                 <a
                   class="serial-card__link"
-                  href={`/serials/${series.data.slug}/${latest.data.slug}`}
+                  href={`/serials/${series.data.slug}/${getInstallmentSlug(latest)}`}
                 >
                   Read latest
                 </a>

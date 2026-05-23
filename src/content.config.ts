@@ -19,7 +19,6 @@ const installments = defineCollection({
     series: z.string(),
     installment: z.number(),
     publishedAt: z.coerce.date(),
-    slug: z.string(),
     dateline: z.string().optional(),
     draft: z.boolean().default(false),
   }),

@@ -3,7 +3,6 @@ title: "The Second Note"
 series: notes-from-a-bachelor
 installment: 2
 publishedAt: 2026-05-23
-slug: the-second-note
 dateline: "Saturday evening"
 draft: false
 ---

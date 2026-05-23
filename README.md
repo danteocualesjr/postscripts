@@ -21,6 +21,8 @@ Open [http://localhost:4321](http://localhost:4321).
 
    `src/content/installments/notes-from-a-bachelor/02-an-evening-letter.md`
 
+   The URL slug comes from the filename after the number prefix (`02-an-evening-letter.md` → `/serials/notes-from-a-bachelor/an-evening-letter`).
+
 2. Add frontmatter:
 
 ```yaml
@@ -29,7 +31,6 @@ title: "An Evening Letter"
 series: notes-from-a-bachelor
 installment: 2
 publishedAt: 2026-05-30
-slug: an-evening-letter
 dateline: "Sunday night"
 draft: false
 ---
