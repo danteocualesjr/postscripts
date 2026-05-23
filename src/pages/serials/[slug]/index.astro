@@ -32,6 +32,7 @@ const latest = installments.at(-1);
   <section class="series-hero">
     <p class="series-hero__kicker">Serial</p>
     <h1 class="series-hero__title">{series.data.title}</h1>
+    {series.data.author && <p class="series-hero__author">By {series.data.author}</p>}
     <p class="series-hero__description">{series.data.description}</p>
 
     {

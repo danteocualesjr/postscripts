@@ -8,6 +8,7 @@ const series = defineCollection({
     slug: z.string(),
     description: z.string(),
     status: z.enum(['ongoing', 'complete', 'coming-soon']),
+    author: z.string().optional(),
     order: z.number(),
   }),
 });

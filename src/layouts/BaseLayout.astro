@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Masthead from '../components/Masthead.astro';
+import { site } from '../lib/site';
 
 interface Props {
   title: string;
@@ -26,7 +27,12 @@ const pageTitle = title === 'Postscripts' ? title : `${title} · Postscripts`;
       <main class="site-main">
         <slot />
       </main>
-      <footer class="site-footer">Postscripts · Fiction by correspondence</footer>
+      <footer class="site-footer">
+        <p class="site-footer__line">{site.title} · Fiction by correspondence</p>
+        <p class="site-footer__line">
+          {site.author} · <a href={`mailto:${site.email}`}>{site.email}</a>
+        </p>
+      </footer>
     </div>
   </body>
 </html>

@@ -44,6 +44,7 @@ const next = index >= 0 && index < installments.length - 1 ? installments[index 
     </p>
     <h1 class="reading__title">{entry.data.title}</h1>
     <p class="reading__meta">
+      {series?.data.author && <span class="reading__author">By {series.data.author} · </span>}
       Installment {entry.data.installment} · {formatDate(entry.data.publishedAt)}
     </p>
 
