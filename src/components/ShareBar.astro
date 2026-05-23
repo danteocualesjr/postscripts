@@ -1,0 +1,88 @@
+---
+interface Props {
+  url: string;
+  title: string;
+  text: string;
+  tweetUrl: string;
+}
+
+const { url, title, text, tweetUrl } = Astro.props;
+---
+
+<div class="share-bar" data-share-root>
+  <p class="share-bar__label">Share this note</p>
+  <div class="share-bar__actions">
+    <a
+      class="share-bar__button share-bar__button--x"
+      href={tweetUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Post on X
+    </a>
+    <button
+      class="share-bar__button share-bar__button--instagram"
+      type="button"
+      data-copy-link
+      data-url={url}
+    >
+      Copy for Instagram
+    </button>
+    <button
+      class="share-bar__button share-bar__button--native"
+      type="button"
+      hidden
+      data-native-share
+      data-url={url}
+      data-title={title}
+      data-text={text}
+    >
+      Share…
+    </button>
+  </div>
+  <p class="share-bar__status" hidden data-share-status role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  document.querySelectorAll('[data-share-root]').forEach((root) => {
+    const copyBtn = root.querySelector('[data-copy-link]');
+    const nativeBtn = root.querySelector('[data-native-share]');
+    const status = root.querySelector('[data-share-status]');
+
+    const showStatus = (message: string) => {
+      if (!status) return;
+      status.textContent = message;
+      status.hidden = false;
+      window.setTimeout(() => {
+        status.hidden = true;
+      }, 4000);
+    };
+
+    if (navigator.share && nativeBtn instanceof HTMLButtonElement) {
+      nativeBtn.hidden = false;
+      nativeBtn.addEventListener('click', async () => {
+        try {
+          await navigator.share({
+            title: nativeBtn.dataset.title,
+            text: nativeBtn.dataset.text,
+            url: nativeBtn.dataset.url,
+          });
+        } catch {
+          /* user dismissed share sheet */
+        }
+      });
+    }
+
+    copyBtn?.addEventListener('click', async () => {
+      const link = copyBtn instanceof HTMLButtonElement ? copyBtn.dataset.url : undefined;
+      if (!link) return;
+
+      try {
+        await navigator.clipboard.writeText(link);
+        showStatus('Link copied — paste in Instagram Stories, a post, or your bio.');
+      } catch {
+        showStatus('Could not copy the link. Select and copy the address bar instead.');
+      }
+    });
+  });
+</script>

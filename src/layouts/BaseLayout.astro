@@ -1,24 +1,50 @@
 ---
 import '../styles/global.css';
 import Masthead from '../components/Masthead.astro';
-import { site } from '../lib/site';
+import { site, siteOrigin } from '../lib/site';
 
 interface Props {
   title: string;
   description?: string;
+  canonicalPath?: string;
+  ogType?: 'website' | 'article';
 }
 
-const { title, description = 'Serial fiction, in letters.' } = Astro.props;
-const pageTitle = title === 'Postscripts' ? title : `${title} · Postscripts`;
+const {
+  title,
+  description = 'Serial fiction, in letters.',
+  canonicalPath = Astro.url.pathname,
+  ogType = 'website',
+} = Astro.props;
+
+const pageTitle = title === 'Postscripts' ? title : `${title} · ${site.title}`;
+const origin = siteOrigin(Astro.url.origin);
+const canonicalUrl = new URL(canonicalPath, origin).href;
+const ogImage = new URL('/og-card.svg', origin).href;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content={description} />
+    <meta name="author" content={site.author} />
+    <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
     <title>{pageTitle}</title>
   </head>
   <body>
