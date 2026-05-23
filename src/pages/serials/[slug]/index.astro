@@ -5,6 +5,7 @@ import {
   getSeriesBySlug,
   getPublishedInstallments,
   formatDate,
+  formatDateTimeAttr,
 } from '../../../lib/serials';
 
 export async function getStaticPaths() {
@@ -65,7 +66,7 @@ const latest = installments.at(-1);
               <span class="installment-index__title">
                 <a href={`/serials/${slug}/${entry.data.slug}`}>{entry.data.title}</a>
               </span>
-              <time class="installment-index__date" datetime={entry.data.publishedAt.toISOString()}>
+              <time class="installment-index__date" datetime={formatDateTimeAttr(entry.data.publishedAt)}>
                 {formatDate(entry.data.publishedAt)}
               </time>
             </li>
