@@ -1,7 +1,7 @@
 ---
 title: "Notes From a Bachelor"
 slug: notes-from-a-bachelor
-description: "A bachelor keeps a private record of evenings, invitations, and the quiet comedy of living alone in a city that never quite lets you."
+description: "Occasional notes from a bachelor on the books he reads, the sentences he admires, and the old-fashioned art of putting a thought on paper."
 status: ongoing
 order: 1
 ---

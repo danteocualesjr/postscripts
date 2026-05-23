@@ -1,6 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getAllSeries, getPublishedInstallments } from '../lib/serials';
+import {
+  getAllSeries,
+  getPublishedInstallments,
+  formatSeriesStatus,
+} from '../lib/serials';
 
 const seriesList = await getAllSeries();
 const installmentsBySeries = Object.fromEntries(
@@ -31,7 +35,7 @@ const installmentsBySeries = Object.fromEntries(
 
         return (
           <li class="serial-card">
-            <p class="serial-card__status">{series.data.status}</p>
+            <p class="serial-card__status">{formatSeriesStatus(series.data.status)}</p>
             <h3 class="serial-card__title">
               <a href={`/serials/${series.data.slug}`}>{series.data.title}</a>
             </h3>

@@ -33,6 +33,16 @@ export async function getInstallment(
   return installments.find((entry) => entry.data.slug === installmentSlug);
 }
 
+const STATUS_LABELS: Record<SeriesEntry['data']['status'], string> = {
+  ongoing: 'Ongoing',
+  complete: 'Complete',
+  'coming-soon': 'Coming Soon',
+};
+
+export function formatSeriesStatus(status: SeriesEntry['data']['status']): string {
+  return STATUS_LABELS[status];
+}
+
 export function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     month: 'long',
