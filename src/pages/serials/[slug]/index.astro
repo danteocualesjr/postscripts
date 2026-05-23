@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import {
+  getAllSeries,
+  getSeriesBySlug,
+  getPublishedInstallments,
+  formatDate,
+} from '../../../lib/serials';
+
+export async function getStaticPaths() {
+  const seriesList = await getAllSeries();
+  return seriesList.map((series) => ({
+    params: { slug: series.data.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const series = await getSeriesBySlug(slug!);
+
+if (!series) {
+  return Astro.redirect('/');
+}
+
+const installments = await getPublishedInstallments(slug!);
+const first = installments[0];
+const latest = installments.at(-1);
+---
+
+<BaseLayout title={series.data.title} description={series.data.description}>
+  <section class="series-hero">
+    <p class="series-hero__kicker">Serial</p>
+    <h1 class="series-hero__title">{series.data.title}</h1>
+    <p class="series-hero__description">{series.data.description}</p>
+
+    {
+      latest && (
+        <div class="series-hero__latest">
+          <p class="series-hero__latest-label">Latest installment</p>
+          <p class="series-hero__latest-title">
+            <a href={`/serials/${slug}/${latest.data.slug}`}>{latest.data.title}</a>
+          </p>
+        </div>
+      )
+    }
+
+    {
+      first && (
+        <a class="series-hero__start" href={`/serials/${slug}/${first.data.slug}`}>
+          Start here
+        </a>
+      )
+    }
+  </section>
+
+  {
+    installments.length > 0 ? (
+      <section class="installment-index">
+        <h2 class="section-label">All installments</h2>
+        <ol class="installment-index__list">
+          {installments.map((entry) => (
+            <li class="installment-index__item">
+              <span class="installment-index__number">
+                {String(entry.data.installment).padStart(2, '0')}
+              </span>
+              <span class="installment-index__title">
+                <a href={`/serials/${slug}/${entry.data.slug}`}>{entry.data.title}</a>
+              </span>
+              <time class="installment-index__date" datetime={entry.data.publishedAt.toISOString()}>
+                {formatDate(entry.data.publishedAt)}
+              </time>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ) : (
+      <section class="home-intro">
+        <p>No installments published yet. Check back soon.</p>
+      </section>
+    )
+  }
+</BaseLayout>

@@ -1,17 +1,63 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllSeries, getPublishedInstallments } from '../lib/serials';
 
+const seriesList = await getAllSeries();
+const installmentsBySeries = Object.fromEntries(
+  await Promise.all(
+    seriesList.map(async (series) => [
+      series.data.slug,
+      await getPublishedInstallments(series.data.slug),
+    ]),
+  ),
+);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Postscripts">
+  <section class="home-intro">
+    <p>
+      A literary magazine for serial fiction told through letters, notes, and dispatches.
+      Choose a series and read from the beginning, or pick up the latest installment.
+    </p>
+  </section>
+
+  <h2 class="section-label">Serials</h2>
+
+  <ul class="serial-list">
+    {
+      seriesList.map((series) => {
+        const installments = installmentsBySeries[series.data.slug] ?? [];
+        const latest = installments.at(-1);
+
+        return (
+          <li class="serial-card">
+            <p class="serial-card__status">{series.data.status}</p>
+            <h3 class="serial-card__title">
+              <a href={`/serials/${series.data.slug}`}>{series.data.title}</a>
+            </h3>
+            <p class="serial-card__description">{series.data.description}</p>
+            <p class="serial-card__meta">
+              {installments.length === 0
+                ? 'Coming soon'
+                : `${installments.length} installment${installments.length === 1 ? '' : 's'}`}
+            </p>
+            {
+              latest ? (
+                <a
+                  class="serial-card__link"
+                  href={`/serials/${series.data.slug}/${latest.data.slug}`}
+                >
+                  Read latest
+                </a>
+              ) : (
+                <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
+                  View series
+                </a>
+              )
+            }
+          </li>
+        );
+      })
+    }
+  </ul>
+</BaseLayout>
