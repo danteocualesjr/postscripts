@@ -57,7 +57,7 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
   ogType="article"
 >
   <article class="reading">
-    <a class="reading__back" href={`/serials/${slug}`}>← {series?.data.title ?? 'Series'}</a>
+    <a class="reading__back" href={`/serials/${slug}`}>{series?.data.title ?? 'Series'}</a>
 
     <p class="reading__kicker">
       <a href={`/serials/${slug}`}>{series?.data.title}</a>
