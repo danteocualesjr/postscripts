@@ -1,13 +1,16 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ShareBar from '../../../components/ShareBar.astro';
 import {
   getAllSeries,
   getSeriesBySlug,
   getPublishedInstallments,
-  getInstallmentSlug,
   formatDate,
-  formatDateTimeAttr,
+  estimateReadingMinutes,
 } from '../../../lib/serials';
+import { buildShareText, buildTweetUrl, resolveCanonicalUrl } from '../../../lib/share';
+import { siteOrigin } from '../../../lib/site';
+import { render } from 'astro:content';
 
 export async function getStaticPaths() {
   const seriesList = await getAllSeries();
@@ -24,61 +27,119 @@ if (!series) {
 }
 
 const installments = await getPublishedInstallments(slug!);
-const first = installments[0];
-const latest = installments.at(-1);
+const stories = await Promise.all(
+  installments.map(async (entry) => {
+    const { Content } = await render(entry);
+    return { entry, Content };
+  }),
+);
+
+const totalReadingMinutes = stories.reduce(
+  (sum, { entry }) => sum + estimateReadingMinutes(entry.body),
+  0,
+);
+
+const canonicalPath = `/serials/${slug}`;
+const origin = siteOrigin(Astro.url.origin);
+const shareUrl = resolveCanonicalUrl(canonicalPath, Astro.site, origin);
+const shareText = buildShareText(series.data.title, 'Postscripts');
+const tweetUrl = buildTweetUrl(shareUrl, shareText);
 ---
 
-<BaseLayout title={series.data.title} description={series.data.description}>
-  <section class="series-hero">
-    <p class="series-hero__kicker">Serial</p>
-    <h1 class="series-hero__title">{series.data.title}</h1>
-    {series.data.author && <p class="series-hero__author">By {series.data.author}</p>}
-    <p class="series-hero__description">{series.data.description}</p>
+<BaseLayout title={series.data.title} description={series.data.description} canonicalPath={canonicalPath}>
+  {
+    stories.length > 0 && (
+      <div
+        class="reading-progress"
+        role="progressbar"
+        aria-label="Reading progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="reading-progress__bar" data-reading-progress></div>
+      </div>
+    )
+  }
 
-    {
-      latest && (
-        <div class="series-hero__latest">
-          <p class="series-hero__latest-label">Latest installment</p>
-          <p class="series-hero__latest-title">
-            <a href={`/serials/${slug}/${getInstallmentSlug(latest)}`}>{latest.data.title}</a>
+  <article class="reading series-reading">
+    <a class="reading__back" href="/">Postscripts</a>
+
+    <header class="series-hero series-hero--reading">
+      <p class="series-hero__kicker">Serial</p>
+      <h1 class="series-hero__title">{series.data.title}</h1>
+      {series.data.author && <p class="series-hero__author">By {series.data.author}</p>}
+      <p class="series-hero__description">{series.data.description}</p>
+      {
+        stories.length > 0 && (
+          <p class="series-hero__meta">
+            {formatDate(stories[0]!.entry.data.publishedAt)}
+            {stories.length > 1 && (
+              <>
+                {' '}
+                – {formatDate(stories.at(-1)!.entry.data.publishedAt)}
+              </>
+            )}
+            {' · '}
+            <span class="reading__time">{totalReadingMinutes} min read</span>
           </p>
+        )
+      }
+    </header>
+
+    {
+      stories.length > 0 ? (
+        <div class="series-reading__stories">
+          {stories.map(({ entry, Content }) => (
+            <section class="series-story">
+              <h2 class="series-story__title">{entry.data.title}</h2>
+              {entry.data.dateline && <p class="reading__dateline">{entry.data.dateline}</p>}
+              <div class="reading__body">
+                <Content />
+              </div>
+            </section>
+          ))}
         </div>
+      ) : (
+        <section class="home-intro">
+          <p>No stories published yet. Check back soon.</p>
+        </section>
       )
     }
 
     {
-      first && (
-        <a class="series-hero__start" href={`/serials/${slug}/${getInstallmentSlug(first)}`}>
-          Start here
-        </a>
+      stories.length > 0 && (
+        <ShareBar
+          url={shareUrl}
+          title={series.data.title}
+          text={shareText}
+          tweetUrl={tweetUrl}
+        />
       )
     }
-  </section>
+  </article>
 
   {
-    installments.length > 0 ? (
-      <section class="installment-index">
-        <h2 class="section-label">All installments</h2>
-        <ol class="installment-index__list">
-          {installments.map((entry) => (
-            <li class="installment-index__item">
-              <span class="installment-index__number">
-                {String(entry.data.installment).padStart(2, '0')}
-              </span>
-              <span class="installment-index__title">
-                <a href={`/serials/${slug}/${getInstallmentSlug(entry)}`}>{entry.data.title}</a>
-              </span>
-              <time class="installment-index__date" datetime={formatDateTimeAttr(entry.data.publishedAt)}>
-                {formatDate(entry.data.publishedAt)}
-              </time>
-            </li>
-          ))}
-        </ol>
-      </section>
-    ) : (
-      <section class="home-intro">
-        <p>No installments published yet. Check back soon.</p>
-      </section>
+    stories.length > 0 && (
+      <script>
+        const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
+        const article = document.querySelector<HTMLElement>('.series-reading');
+        const progress = bar?.parentElement;
+        if (bar && article && progress) {
+          const update = () => {
+            const rect = article.getBoundingClientRect();
+            const viewport = window.innerHeight || document.documentElement.clientHeight;
+            const total = Math.max(1, rect.height - viewport);
+            const scrolled = Math.min(Math.max(-rect.top, 0), total);
+            const ratio = total > 0 ? scrolled / total : 0;
+            bar.style.transform = `scaleX(${ratio})`;
+            progress.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+          };
+          update();
+          window.addEventListener('scroll', update, { passive: true });
+          window.addEventListener('resize', update);
+        }
+      </script>
     )
   }
 </BaseLayout>

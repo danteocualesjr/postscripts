@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   getAllSeries,
   getPublishedInstallments,
-  getInstallmentSlug,
   formatSeriesStatus,
 } from '../lib/serials';
 
@@ -32,7 +31,6 @@ const installmentsBySeries = Object.fromEntries(
     {
       seriesList.map((series) => {
         const installments = installmentsBySeries[series.data.slug] ?? [];
-        const latest = installments.at(-1);
 
         return (
           <li class="serial-card">
@@ -41,18 +39,15 @@ const installmentsBySeries = Object.fromEntries(
               <a href={`/serials/${series.data.slug}`}>{series.data.title}</a>
             </h3>
             <p class="serial-card__description">{series.data.description}</p>
-            <p class="serial-card__meta">
-              {installments.length === 0
-                ? 'Coming soon'
-                : `${installments.length} installment${installments.length === 1 ? '' : 's'}`}
-            </p>
             {
-              latest ? (
-                <a
-                  class="serial-card__link"
-                  href={`/serials/${series.data.slug}/${getInstallmentSlug(latest)}`}
-                >
-                  Read latest
+              installments.length === 0 && (
+                <p class="serial-card__meta">Coming soon</p>
+              )
+            }
+            {
+              installments.length > 0 ? (
+                <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
+                  Read
                 </a>
               ) : (
                 <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
