@@ -46,6 +46,22 @@ const ogImage = new URL('/og-card.svg', origin).href;
     <meta name="twitter:image" content={ogImage} />
 
     <title>{pageTitle}</title>
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('postscripts:theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (_) {
+          /* leave default */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div class="site-shell">

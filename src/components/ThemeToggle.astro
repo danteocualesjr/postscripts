@@ -1,0 +1,61 @@
+---
+---
+
+<button
+  type="button"
+  class="theme-toggle"
+  data-theme-toggle
+  aria-label="Toggle dark mode"
+  title="Toggle dark mode"
+>
+  <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">☾</span>
+  <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">☀</span>
+  <span class="theme-toggle__label">Toggle dark mode</span>
+</button>
+
+<script>
+  const STORAGE_KEY = 'postscripts:theme';
+  const root = document.documentElement;
+
+  type Theme = 'light' | 'dark';
+
+  const systemPrefersDark = () =>
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const currentTheme = (): Theme => {
+    const explicit = root.getAttribute('data-theme');
+    if (explicit === 'light' || explicit === 'dark') return explicit;
+    return systemPrefersDark() ? 'dark' : 'light';
+  };
+
+  const applyTheme = (theme: Theme) => {
+    root.setAttribute('data-theme', theme);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      /* storage may be blocked; falling back to in-memory state is fine */
+    }
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    });
+  });
+
+  if (typeof window.matchMedia === 'function') {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener?.('change', (event) => {
+      let stored: Theme | null = null;
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw === 'light' || raw === 'dark') stored = raw;
+      } catch {
+        /* ignore */
+      }
+      if (stored) return;
+      root.setAttribute('data-theme', event.matches ? 'dark' : 'light');
+    });
+  }
+</script>
