@@ -65,3 +65,20 @@ export function formatDateTimeAttr(date: Date): string {
   const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Estimate reading time in whole minutes from a markdown body.
+ * Strips obvious markup, counts whitespace-delimited tokens, divides by 200 wpm,
+ * and rounds up to the nearest minute (minimum 1).
+ */
+export function estimateReadingMinutes(body: string | undefined): number {
+  if (!body) return 1;
+  const text = body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_~\-]/g, ' ');
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}

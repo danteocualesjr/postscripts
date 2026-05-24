@@ -6,6 +6,7 @@ import {
   getInstallmentSlug,
   getSeriesBySlug,
   formatDate,
+  estimateReadingMinutes,
 } from '../../../lib/serials';
 import { buildShareText, buildTweetUrl, resolveCanonicalUrl } from '../../../lib/share';
 import { siteOrigin } from '../../../lib/site';
@@ -48,6 +49,7 @@ const shareUrl = resolveCanonicalUrl(canonicalPath, Astro.site, origin);
 const shareText = buildShareText(entry.data.title, series?.data.title ?? 'Postscripts');
 const tweetUrl = buildTweetUrl(shareUrl, shareText);
 const shareDescription = series?.data.description ?? 'Serial fiction, in letters.';
+const readingMinutes = estimateReadingMinutes(entry.body);
 ---
 
 <BaseLayout
@@ -56,6 +58,17 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
   canonicalPath={canonicalPath}
   ogType="article"
 >
+  <div
+    class="reading-progress"
+    role="progressbar"
+    aria-label="Reading progress"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+  >
+    <div class="reading-progress__bar" data-reading-progress></div>
+  </div>
+
   <article class="reading">
     <a class="reading__back" href={`/serials/${slug}`}>{series?.data.title ?? 'Series'}</a>
 
@@ -65,7 +78,8 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
     <h1 class="reading__title">{entry.data.title}</h1>
     <p class="reading__meta">
       {series?.data.author && <span class="reading__author">By {series.data.author} · </span>}
-      Installment {entry.data.installment} · {formatDate(entry.data.publishedAt)}
+      Installment {entry.data.installment} · {formatDate(entry.data.publishedAt)} ·
+      <span class="reading__time">{readingMinutes} min read</span>
     </p>
 
     {entry.data.dateline && <p class="reading__dateline">{entry.data.dateline}</p>}
@@ -80,7 +94,8 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
       {
         prev ? (
           <a class="reading__nav-link" href={`/serials/${slug}/${getInstallmentSlug(prev)}`}>
-            ← {prev.data.title}
+            <span class="reading__nav-kicker">← Previous</span>
+            <span class="reading__nav-title">{prev.data.title}</span>
           </a>
         ) : (
           <span />
@@ -92,7 +107,8 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
             class="reading__nav-link reading__nav-link--next"
             href={`/serials/${slug}/${getInstallmentSlug(next)}`}
           >
-            {next.data.title} →
+            <span class="reading__nav-kicker">Next →</span>
+            <span class="reading__nav-title">{next.data.title}</span>
           </a>
         ) : (
           <span />
@@ -100,4 +116,24 @@ const shareDescription = series?.data.description ?? 'Serial fiction, in letters
       }
     </nav>
   </article>
+
+  <script>
+    const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
+    const article = document.querySelector<HTMLElement>('.reading');
+    const progress = bar?.parentElement;
+    if (bar && article && progress) {
+      const update = () => {
+        const rect = article.getBoundingClientRect();
+        const viewport = window.innerHeight || document.documentElement.clientHeight;
+        const total = Math.max(1, rect.height - viewport);
+        const scrolled = Math.min(Math.max(-rect.top, 0), total);
+        const ratio = total > 0 ? scrolled / total : 0;
+        bar.style.transform = `scaleX(${ratio})`;
+        progress.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+      };
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+    }
+  </script>
 </BaseLayout>
