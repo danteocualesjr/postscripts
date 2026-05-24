@@ -32,6 +32,11 @@ const { slug, installment: installmentSlug } = Astro.params;
 const { entry, Content } = Astro.props;
 
 const series = await getSeriesBySlug(slug!);
+
+if (!series) {
+  return Astro.redirect('/');
+}
+
 const installments = await getPublishedInstallments(slug!);
 const index = installments.findIndex((item) => getInstallmentSlug(item) === installmentSlug);
 const prev = index > 0 ? installments[index - 1] : undefined;
