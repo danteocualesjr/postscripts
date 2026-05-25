@@ -14,7 +14,12 @@ const series = defineCollection({
 });
 
 const installments = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/installments' }),
+  // Only numbered story files (e.g. 01-the-first-note.md). Scratch files like
+  // 00-drafts.md in the same folder are ignored by the site.
+  loader: glob({
+    pattern: ['**/[0-9][1-9]-*.md', '**/[1-9][0-9]-*.md'],
+    base: './src/content/installments',
+  }),
   schema: z.object({
     title: z.string(),
     series: z.string(),

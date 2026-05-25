@@ -23,6 +23,8 @@ Open [http://localhost:4321](http://localhost:4321).
 
    The URL slug comes from the filename after the number prefix (`02-an-evening-letter.md` → `/serials/notes-from-a-bachelor/an-evening-letter`).
 
+   Files named `00-*.md` (e.g. `00-drafts.md`) are scratch pads in the same folder — the site ignores them and they do not need frontmatter.
+
 2. Add frontmatter:
 
 ```yaml
