@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
+import { site } from '../lib/site';
 ---
 
 <header class="masthead">
@@ -8,5 +9,10 @@ import ThemeToggle from './ThemeToggle.astro';
     <span class="masthead__flourish" aria-hidden="true">❦</span>
     <p class="masthead__tagline">Serial fiction, in letters</p>
   </a>
+  <nav class="masthead__nav" aria-label="Primary navigation">
+    <a href="/">Home</a>
+    <a href="/#serials">Serials</a>
+    <a href={`mailto:${site.email}`}>Contact</a>
+  </nav>
   <ThemeToggle />
 </header>

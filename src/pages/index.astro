@@ -2,7 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   getAllSeries,
+  getInstallmentSlug,
   getPublishedInstallments,
+  estimateReadingMinutes,
+  formatDate,
   formatSeriesStatus,
 } from '../lib/serials';
 
@@ -15,49 +18,189 @@ const installmentsBySeries = Object.fromEntries(
     ]),
   ),
 );
+const allInstallments = Object.values(installmentsBySeries).flat();
+const totalReadingMinutes = allInstallments.reduce(
+  (sum, entry) => sum + estimateReadingMinutes(entry.body),
+  0,
+);
+const activeSeriesCount = seriesList.filter((series) => series.data.status === 'ongoing').length;
+const latestInstallment = allInstallments
+  .slice()
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())[0];
 ---
 
 <BaseLayout title="Postscripts">
-  <section class="home-intro">
-    <p>
-      A literary magazine for serial fiction told through letters, notes, and dispatches.
+  <section class="home-hero" aria-labelledby="home-title">
+    <p class="home-hero__eyebrow">Fiction by correspondence</p>
+    <h2 class="home-hero__title" id="home-title">Letters, notes, and dispatches delivered in sequence.</h2>
+    <p class="home-hero__description">
+      A literary magazine for serial fiction told through the intimacy of written artifacts.
       Choose a series and read from the beginning, or pick up the latest installment.
     </p>
+    <div class="home-hero__actions">
+      <a class="button-link" href="#serials">Browse serials</a>
+      {
+        latestInstallment && (
+          <a
+            class="button-link button-link--ghost"
+            href={`/serials/${latestInstallment.data.series}/${getInstallmentSlug(latestInstallment)}`}
+          >
+            Latest note
+          </a>
+        )
+      }
+    </div>
+    <dl class="home-stats" aria-label="Postscripts library statistics">
+      <div>
+        <dt>{seriesList.length}</dt>
+        <dd>{seriesList.length === 1 ? 'Serial' : 'Serials'}</dd>
+      </div>
+      <div>
+        <dt>{allInstallments.length}</dt>
+        <dd>{allInstallments.length === 1 ? 'Installment' : 'Installments'}</dd>
+      </div>
+      <div>
+        <dt>{totalReadingMinutes}</dt>
+        <dd>Minutes to read</dd>
+      </div>
+      <div>
+        <dt>{activeSeriesCount}</dt>
+        <dd>Ongoing</dd>
+      </div>
+    </dl>
   </section>
 
-  <h2 class="section-label">Serials</h2>
+  <section class="serials-toolbar" aria-labelledby="serials">
+    <div>
+      <p class="section-label section-label--left">Library</p>
+      <h2 class="serials-toolbar__title" id="serials">Serials</h2>
+    </div>
+    <label class="serials-search">
+      <span>Search serials</span>
+      <input type="search" placeholder="Search by title, author, or premise" data-series-search />
+    </label>
+    <div class="serials-filters" role="group" aria-label="Filter serials by status">
+      <button type="button" class="serials-filter is-active" data-series-filter="all" aria-pressed="true">
+        All
+      </button>
+      <button type="button" class="serials-filter" data-series-filter="ongoing" aria-pressed="false">
+        Ongoing
+      </button>
+      <button type="button" class="serials-filter" data-series-filter="coming-soon" aria-pressed="false">
+        Coming soon
+      </button>
+      <button type="button" class="serials-filter" data-series-filter="complete" aria-pressed="false">
+        Complete
+      </button>
+    </div>
+  </section>
 
-  <ul class="serial-list">
+  <ul class="serial-list" data-series-list>
     {
       seriesList.map((series) => {
         const installments = installmentsBySeries[series.data.slug] ?? [];
+        const readingMinutes = installments.reduce(
+          (sum, entry) => sum + estimateReadingMinutes(entry.body),
+          0,
+        );
+        const latest = installments.at(-1);
+        const searchText = [
+          series.data.title,
+          series.data.description,
+          series.data.author ?? '',
+          formatSeriesStatus(series.data.status),
+        ].join(' ');
 
         return (
-          <li class="serial-card">
-            <p class="serial-card__status">{formatSeriesStatus(series.data.status)}</p>
+          <li
+            class="serial-card"
+            data-series-card
+            data-status={series.data.status}
+            data-search={searchText.toLowerCase()}
+          >
+            <div class="serial-card__topline">
+              <p class="serial-card__status">{formatSeriesStatus(series.data.status)}</p>
+              {series.data.author && <p class="serial-card__author">By {series.data.author}</p>}
+            </div>
             <h3 class="serial-card__title">
               <a href={`/serials/${series.data.slug}`}>{series.data.title}</a>
             </h3>
             <p class="serial-card__description">{series.data.description}</p>
-            {
-              installments.length === 0 && (
-                <p class="serial-card__meta">Coming soon</p>
-              )
-            }
-            {
-              installments.length > 0 ? (
-                <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
-                  Read
+            <ul class="serial-card__facts" aria-label={`${series.data.title} details`}>
+              <li>{installments.length || 'No'} {installments.length === 1 ? 'installment' : 'installments'}</li>
+              {
+                installments.length > 0 ? (
+                  <li>{readingMinutes} min total</li>
+                ) : (
+                  <li>Coming soon</li>
+                )
+              }
+              {latest && <li>Latest {formatDate(latest.data.publishedAt)}</li>}
+            </ul>
+            <div class="serial-card__actions">
+              {
+                installments.length > 0 ? (
+                  <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
+                    Read from beginning
+                  </a>
+                ) : (
+                  <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
+                    View series
+                  </a>
+                )
+              }
+              {latest && (
+                <a
+                  class="serial-card__link serial-card__link--secondary"
+                  href={`/serials/${series.data.slug}/${getInstallmentSlug(latest)}`}
+                >
+                  Latest note
                 </a>
-              ) : (
-                <a class="serial-card__link" href={`/serials/${series.data.slug}`}>
-                  View series
-                </a>
-              )
-            }
+              )}
+            </div>
           </li>
         );
       })
     }
   </ul>
+  <p class="serial-list-empty" hidden data-series-empty>
+    No serials match those filters. Try another status or search term.
+  </p>
+
+  <script>
+    const searchInput = document.querySelector<HTMLInputElement>('[data-series-search]');
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-series-card]'));
+    const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-series-filter]'));
+    const emptyState = document.querySelector<HTMLElement>('[data-series-empty]');
+    let activeFilter = 'all';
+
+    const updateCards = () => {
+      const query = searchInput?.value.trim().toLowerCase() ?? '';
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matchesFilter = activeFilter === 'all' || card.dataset.status === activeFilter;
+        const matchesSearch = !query || (card.dataset.search ?? '').includes(query);
+        const isVisible = matchesFilter && matchesSearch;
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      });
+
+      if (emptyState) emptyState.hidden = visibleCount > 0;
+    };
+
+    filters.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.seriesFilter ?? 'all';
+        filters.forEach((item) => {
+          const isActive = item === button;
+          item.classList.toggle('is-active', isActive);
+          item.setAttribute('aria-pressed', String(isActive));
+        });
+        updateCards();
+      });
+    });
+
+    searchInput?.addEventListener('input', updateCards);
+  </script>
 </BaseLayout>

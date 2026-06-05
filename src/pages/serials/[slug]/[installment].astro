@@ -1,11 +1,13 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ReadingTools from '../../../components/ReadingTools.astro';
 import ShareBar from '../../../components/ShareBar.astro';
 import {
   getPublishedInstallments,
   getInstallmentSlug,
   getSeriesBySlug,
   formatDate,
+  formatDateTimeAttr,
   estimateReadingMinutes,
 } from '../../../lib/serials';
 import { buildShareText, buildTweetUrl, resolveCanonicalUrl } from '../../../lib/share';
@@ -71,6 +73,7 @@ const readingMinutes = estimateReadingMinutes(entry.body);
 
   <article class="reading">
     <a class="reading__back" href={`/serials/${slug}`}>{series?.data.title ?? 'Series'}</a>
+    <ReadingTools />
 
     <p class="reading__kicker">
       <a href={`/serials/${slug}`}>{series?.data.title}</a>
@@ -78,7 +81,11 @@ const readingMinutes = estimateReadingMinutes(entry.body);
     <h1 class="reading__title">{entry.data.title}</h1>
     <p class="reading__meta">
       {series?.data.author && <span class="reading__author">By {series.data.author} · </span>}
-      Installment {entry.data.installment} · {formatDate(entry.data.publishedAt)} ·
+      Installment {entry.data.installment} ·{' '}
+      <time datetime={formatDateTimeAttr(entry.data.publishedAt)}>
+        {formatDate(entry.data.publishedAt)}
+      </time>
+      {' · '}
       <span class="reading__time">{readingMinutes} min read</span>
     </p>
 
@@ -87,6 +94,8 @@ const readingMinutes = estimateReadingMinutes(entry.body);
     <div class="reading__body">
       <Content />
     </div>
+
+    <p class="reading__endmark" aria-hidden="true">End of installment {entry.data.installment}</p>
 
     <ShareBar url={shareUrl} title={entry.data.title} text={shareText} tweetUrl={tweetUrl} />
 

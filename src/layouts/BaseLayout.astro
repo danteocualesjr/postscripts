@@ -30,6 +30,8 @@ const ogImage = new URL('/og-card.svg', origin).href;
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content={description} />
     <meta name="author" content={site.author} />
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#15140f" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
@@ -64,15 +66,21 @@ const ogImage = new URL('/og-card.svg', origin).href;
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#content">Skip to content</a>
     <div class="site-shell">
       <Masthead />
-      <main class="site-main">
+      <main class="site-main" id="content" tabindex="-1">
         <slot />
       </main>
       <footer class="site-footer">
         <p class="site-footer__line">{site.title} · Fiction by correspondence</p>
         <p class="site-footer__line">
           {site.author} · <a href={`mailto:${site.email}`}>{site.email}</a>
+        </p>
+        <p class="site-footer__line site-footer__links">
+          <a href="/#serials">Browse serials</a>
+          <span aria-hidden="true">·</span>
+          <a href="#content">Back to top</a>
         </p>
       </footer>
     </div>

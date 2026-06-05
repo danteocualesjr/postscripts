@@ -7,6 +7,10 @@ interface Props {
 }
 
 const { url, title, text, tweetUrl } = Astro.props;
+const emailUrl = `mailto:?${new URLSearchParams({
+  subject: title,
+  body: `${text}\n\n${url}`,
+}).toString()}`;
 ---
 
 <div class="share-bar" data-share-root>
@@ -20,6 +24,9 @@ const { url, title, text, tweetUrl } = Astro.props;
     >
       Post on X
     </a>
+    <a class="share-bar__button share-bar__button--email" href={emailUrl}>
+      Email
+    </a>
     <button
       class="share-bar__button share-bar__button--instagram"
       type="button"
@@ -27,6 +34,16 @@ const { url, title, text, tweetUrl } = Astro.props;
       data-url={url}
     >
       Copy for Instagram
+    </button>
+    <button
+      class="share-bar__button share-bar__button--citation"
+      type="button"
+      data-copy-citation
+      data-url={url}
+      data-title={title}
+      data-text={text}
+    >
+      Copy citation
     </button>
     <button
       class="share-bar__button share-bar__button--native"
@@ -46,6 +63,7 @@ const { url, title, text, tweetUrl } = Astro.props;
 <script>
   document.querySelectorAll('[data-share-root]').forEach((root) => {
     const copyBtn = root.querySelector('[data-copy-link]');
+    const citationBtn = root.querySelector('[data-copy-citation]');
     const nativeBtn = root.querySelector('[data-native-share]');
     const status = root.querySelector('[data-share-status]');
 
@@ -82,6 +100,22 @@ const { url, title, text, tweetUrl } = Astro.props;
         showStatus('Link copied — paste in Instagram Stories, a post, or your bio.');
       } catch {
         showStatus('Could not copy the link. Select and copy the address bar instead.');
+      }
+    });
+
+    citationBtn?.addEventListener('click', async () => {
+      if (!(citationBtn instanceof HTMLButtonElement)) return;
+
+      const title = citationBtn.dataset.title;
+      const text = citationBtn.dataset.text;
+      const link = citationBtn.dataset.url;
+      if (!title || !text || !link) return;
+
+      try {
+        await navigator.clipboard.writeText(`${title} — ${text}\n${link}`);
+        showStatus('Citation copied.');
+      } catch {
+        showStatus('Could not copy the citation. Select and copy the address bar instead.');
       }
     });
   });
