@@ -1,0 +1,93 @@
+---
+---
+
+<aside class="reader-tools" aria-label="Reading preferences" data-reader-tools>
+  <p class="reader-tools__label">Reading tools</p>
+  <div class="reader-tools__actions">
+    <button
+      type="button"
+      class="reader-tools__button"
+      data-reader-toggle="font"
+      data-default-value="normal"
+      data-active-value="large"
+      aria-pressed="false"
+    >
+      Larger text
+    </button>
+    <button
+      type="button"
+      class="reader-tools__button"
+      data-reader-toggle="measure"
+      data-default-value="classic"
+      data-active-value="wide"
+      aria-pressed="false"
+    >
+      Wider column
+    </button>
+    <button
+      type="button"
+      class="reader-tools__button"
+      data-reader-toggle="leading"
+      data-default-value="relaxed"
+      data-active-value="spacious"
+      aria-pressed="false"
+    >
+      Airier lines
+    </button>
+  </div>
+</aside>
+
+<script>
+  const STORAGE_KEY = 'postscripts:reader-settings';
+  const root = document.documentElement;
+  const toggles = document.querySelectorAll<HTMLButtonElement>('[data-reader-toggle]');
+
+  type ReaderSettings = Record<string, string>;
+
+  const readSettings = (): ReaderSettings => {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const writeSettings = (settings: ReaderSettings) => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      /* storage may be unavailable; the current page still updates */
+    }
+  };
+
+  const applySettings = (settings: ReaderSettings) => {
+    toggles.forEach((button) => {
+      const key = button.dataset.readerToggle;
+      if (!key) return;
+
+      const defaultValue = button.dataset.defaultValue ?? 'default';
+      const activeValue = button.dataset.activeValue ?? 'active';
+      const value = settings[key] ?? defaultValue;
+      root.setAttribute(`data-reader-${key}`, value);
+      button.setAttribute('aria-pressed', String(value === activeValue));
+    });
+  };
+
+  const settings = readSettings();
+  applySettings(settings);
+
+  toggles.forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.readerToggle;
+      if (!key) return;
+
+      const defaultValue = button.dataset.defaultValue ?? 'default';
+      const activeValue = button.dataset.activeValue ?? 'active';
+      const currentValue = root.getAttribute(`data-reader-${key}`) ?? defaultValue;
+      settings[key] = currentValue === activeValue ? defaultValue : activeValue;
+      applySettings(settings);
+      writeSettings(settings);
+    });
+  });
+</script>

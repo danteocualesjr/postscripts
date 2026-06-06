@@ -1,11 +1,14 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ReadingTools from '../../../components/ReadingTools.astro';
 import ShareBar from '../../../components/ShareBar.astro';
 import {
   getAllSeries,
   getSeriesBySlug,
   getPublishedInstallments,
+  getInstallmentSlug,
   formatDate,
+  formatDateTimeAttr,
   estimateReadingMinutes,
 } from '../../../lib/serials';
 import { buildShareText, buildTweetUrl, resolveCanonicalUrl } from '../../../lib/share';
@@ -30,7 +33,7 @@ const installments = await getPublishedInstallments(slug!);
 const stories = await Promise.all(
   installments.map(async (entry) => {
     const { Content } = await render(entry);
-    return { entry, Content };
+    return { entry, Content, slug: getInstallmentSlug(entry) };
   }),
 );
 
@@ -64,6 +67,7 @@ const tweetUrl = buildTweetUrl(shareUrl, shareText);
 
   <article class="reading series-reading">
     <a class="reading__back" href="/">Postscripts</a>
+    <ReadingTools />
 
     <header class="series-hero series-hero--reading">
       <p class="series-hero__kicker">Serial</p>
@@ -73,11 +77,16 @@ const tweetUrl = buildTweetUrl(shareUrl, shareText);
       {
         stories.length > 0 && (
           <p class="series-hero__meta">
-            {formatDate(stories[0]!.entry.data.publishedAt)}
+            <time datetime={formatDateTimeAttr(stories[0]!.entry.data.publishedAt)}>
+              {formatDate(stories[0]!.entry.data.publishedAt)}
+            </time>
             {stories.length > 1 && (
               <>
                 {' '}
-                – {formatDate(stories.at(-1)!.entry.data.publishedAt)}
+                –{' '}
+                <time datetime={formatDateTimeAttr(stories.at(-1)!.entry.data.publishedAt)}>
+                  {formatDate(stories.at(-1)!.entry.data.publishedAt)}
+                </time>
               </>
             )}
             {' · '}
@@ -88,11 +97,34 @@ const tweetUrl = buildTweetUrl(shareUrl, shareText);
     </header>
 
     {
+      stories.length > 1 && (
+        <nav class="story-jump" aria-label="Installments in this serial">
+          <p class="story-jump__label">In this serial</p>
+          <ol class="story-jump__list">
+            {stories.map(({ entry, slug: storySlug }) => (
+              <li>
+                <a href={`#${storySlug}`}>
+                  <span>{String(entry.data.installment).padStart(2, '0')}</span>
+                  {entry.data.title}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    {
       stories.length > 0 ? (
         <div class="series-reading__stories">
-          {stories.map(({ entry, Content }) => (
-            <section class="series-story">
-              <h2 class="series-story__title">{entry.data.title}</h2>
+          {stories.map(({ entry, Content, slug: storySlug }) => (
+            <section class="series-story" id={storySlug}>
+              <p class="series-story__eyebrow">Installment {entry.data.installment}</p>
+              <h2 class="series-story__title">
+                <a href={`#${storySlug}`} aria-label={`Link to ${entry.data.title}`}>
+                  {entry.data.title}
+                </a>
+              </h2>
               {entry.data.dateline && <p class="reading__dateline">{entry.data.dateline}</p>}
               <div class="reading__body">
                 <Content />
